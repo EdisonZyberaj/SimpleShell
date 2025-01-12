@@ -7,6 +7,11 @@
 #include <sys/wait.h> 
 #include <linux/limits.h>
 
+/* 
+ * Analizon komandën e dhënë nga përdoruesi dhe e ndan atë në argumente.
+ * Përdor strtok për të ndarë stringun bazuar në hapësirë, tab dhe karaktere të reja.
+ * Ruan argumentet në një varg args dhe përfundon vargun me NULL.
+ */
 void parse_command(char *input, char **args) {
     char *token = strtok(input, " \n\t");
     int i = 0;
@@ -17,6 +22,11 @@ void parse_command(char *input, char **args) {
     args[i] = NULL;
 }
 
+/*
+ * Kontrollon nëse një file ekziston dhe nëse kemi të drejtat e duhura për të aksesuar.
+ * Kthen -1 nëse file nuk ekziston ose nuk kemi leje, 0 nëse gjithçka është në rregull.
+ * Shfaq mesazhe gabimi nëse ka probleme me aksesin.
+ */
 int check_file_access(const char *path, int mode) {
     if (access(path, F_OK) != 0) {
         fprintf(stderr, "Error: '%s': No such file or directory\n", path);
@@ -29,6 +39,11 @@ int check_file_access(const char *path, int mode) {
     return 0;
 }
 
+/*
+ * Kontrollon për ridrejtime input/output (< dhe >) dhe procese në background (&).
+ * Hap filet e specifikuara për ridrejtim dhe ruan file descriptors.
+ * Modifikon argumentet për të hequr karakteret e ridrejtimit dhe emrat e fileve.
+ */
 int check_redirections(char **args, int *input_fd, int *output_fd, int *background) {
     for (int i = 0; args[i] != NULL; i++) {
         if (strcmp(args[i], "<") == 0) {
@@ -56,6 +71,11 @@ int check_redirections(char **args, int *input_fd, int *output_fd, int *backgrou
     return 0;
 }
 
+/*
+ * Ekzekuton një komandë duke përdorur execvp.
+ * Para ekzekutimit, ridrejton input/output nëse është e nevojshme.
+ * Mbyll file descriptors që nuk nevojiten më.
+ */
 void execute_command(char **args, int input_fd, int output_fd) {
     if (input_fd != STDIN_FILENO) {
         dup2(input_fd, STDIN_FILENO);
@@ -71,6 +91,11 @@ void execute_command(char **args, int input_fd, int output_fd) {
     exit(1);
 }
 
+/*
+ * Ekzekuton dy komanda të lidhura me pipe.
+ * Krijon një pipe dhe dy procese fëmijë.
+ * Procesi i parë shkruan në pipe, i dyti lexon nga pipe.
+ */
 void execute_pipe(char **args1, char **args2) {
     int pipefd[2];
     pid_t pid1, pid2;
@@ -102,6 +127,11 @@ void execute_pipe(char **args1, char **args2) {
     waitpid(pid2, NULL, 0);
 }
 
+/*
+ * Funksioni kryesor që implementon shell-in.
+ * Lexon komandat nga përdoruesi në një loop të pafund derisa të jepet komanda 'exit'.
+ * Suporton komanda të thjeshta, pipe, ridrejtime, dhe procese në background.
+ */
 int main() {
     char input[MAX_in];
     char *args[MAX_ARGS];
