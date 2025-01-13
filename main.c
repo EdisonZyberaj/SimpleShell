@@ -51,9 +51,13 @@ int check_redirections(char **args, int *input_fd, int *output_fd, int *backgrou
                 fprintf(stderr, "Error: Missing file for input redirection\n");
                 return -1;
             }
-            if (check_file_access(args[i + 1], R_OK) != 0) return -1;
             *input_fd = open(args[i + 1], O_RDONLY);
+            if (*input_fd < 0) {
+                perror("Error opening input file");
+                return -1;
+            }
             args[i] = NULL;
+            args[i + 1] = NULL;
             i++;
         } else if (strcmp(args[i], ">") == 0) {
             if (args[i + 1] == NULL) {
@@ -61,7 +65,12 @@ int check_redirections(char **args, int *input_fd, int *output_fd, int *backgrou
                 return -1;
             }
             *output_fd = open(args[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (*output_fd < 0) {
+                perror("Error opening output file");
+                return -1;
+            }
             args[i] = NULL;
+            args[i + 1] = NULL;
             i++;
         } else if (strcmp(args[i], "&") == 0) {
             *background = 1;
@@ -71,25 +80,38 @@ int check_redirections(char **args, int *input_fd, int *output_fd, int *backgrou
     return 0;
 }
 
+
 /*
  * Ekzekuton një komandë duke përdorur execvp.
  * Para ekzekutimit, ridrejton input/output nëse është e nevojshme.
- * Mbyll file descriptors që nuk nevojiten më.
+ * Mbyll file descriptors që nuk nevojiten më. 
  */
 void execute_command(char **args, int input_fd, int output_fd) {
+    // Redirect input if needed
     if (input_fd != STDIN_FILENO) {
-        dup2(input_fd, STDIN_FILENO);
+        if (dup2(input_fd, STDIN_FILENO) < 0) {
+            perror("dup2 input_fd");
+            exit(1);
+        }
         close(input_fd);
     }
+
+    // Redirect output if needed
     if (output_fd != STDOUT_FILENO) {
-        dup2(output_fd, STDOUT_FILENO);
+        if (dup2(output_fd, STDOUT_FILENO) < 0) {
+            perror("dup2 output_fd");
+            exit(1);
+        }
         close(output_fd);
     }
-    
+
+    // Execute the command
     execvp(args[0], args);
-    fprintf(stderr, "Error: Command '%s' failed\n", args[0]);
+    // If execvp returns, there was an error
+    perror("execvp");
     exit(1);
 }
+
 
 /*
  * Ekzekuton dy komanda të lidhura me pipe.
@@ -128,7 +150,7 @@ void execute_pipe(char **args1, char **args2) {
 }
 
 /*
- * Funksioni kryesor që implementon shell-in.
+ * Funksioni kryesor që implementon shell-in.shell_echo
  * Lexon komandat nga përdoruesi në një loop të pafund derisa të jepet komanda 'exit'.
  * Suporton komanda të thjeshta, pipe, ridrejtime, dhe procese në background.
  */

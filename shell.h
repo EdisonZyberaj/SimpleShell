@@ -13,7 +13,7 @@
 
 #define MAX_ARGS 64
 #define HISTORY_SIZE 15
-#define MAX_in 1000//max input qe pranohet
+#define MAX_in 1000 // max input accepted
 
 void get_prompt(char *prompt, size_t size);
 void shell_help(void);
@@ -28,4 +28,4 @@ int handle_builtin(char **args);
 extern char history[HISTORY_SIZE][MAX_in];
 extern int history_count;
 
-#endif 
+#endif  // SHELL_H
