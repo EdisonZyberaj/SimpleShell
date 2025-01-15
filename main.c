@@ -87,7 +87,7 @@ int check_redirections(char **args, int *input_fd, int *output_fd, int *backgrou
  * Mbyll file descriptors që nuk nevojiten më. 
  */
 void execute_command(char **args, int input_fd, int output_fd) {
-    // Redirect input if needed
+
     if (input_fd != STDIN_FILENO) {
         if (dup2(input_fd, STDIN_FILENO) < 0) {
             perror("dup2 input_fd");
@@ -96,7 +96,6 @@ void execute_command(char **args, int input_fd, int output_fd) {
         close(input_fd);
     }
 
-    // Redirect output if needed
     if (output_fd != STDOUT_FILENO) {
         if (dup2(output_fd, STDOUT_FILENO) < 0) {
             perror("dup2 output_fd");
@@ -105,9 +104,8 @@ void execute_command(char **args, int input_fd, int output_fd) {
         close(output_fd);
     }
 
-    // Execute the command
     execvp(args[0], args);
-    // If execvp returns, there was an error
+  
     perror("execvp");
     exit(1);
 }
@@ -150,9 +148,8 @@ void execute_pipe(char **args1, char **args2) {
 }
 
 /*
- * Funksioni kryesor që implementon shell-in.shell_echo
+ * Funksioni kryesor që implementon shell-in
  * Lexon komandat nga përdoruesi në një loop të pafund derisa të jepet komanda 'exit'.
- * Suporton komanda të thjeshta, pipe, ridrejtime, dhe procese në background.
  */
 int main() {
     char input[MAX_in];
@@ -160,7 +157,7 @@ int main() {
     char *pipe_args[MAX_ARGS];
     char prompt[PATH_MAX + 32];
 
-    printf("\n=== Welcome to Simple Shell ===\n");
+    printf("\n=== Welcome to  Shell ===\n");
     printf("Type 'help' for commands\n\n");
 
     while (1) {

@@ -6,15 +6,10 @@
 #include <unistd.h>
 #include <linux/limits.h>
 
-/* Vargu për të ruajtur historinë e komandave dhe numëratori i komandave */
+/* array për të ruajtur historinë e komandave dhe counter per komandat*/
 char history[HISTORY_SIZE][MAX_in];
 int history_count = 0;
 
-/*
- * Gjeneron promptin e shell-it me ngjyra.
- * Zëvendëson path-in e home me '~' nëse jemi në direktorinë home.
- * Përdor kode ANSI për ngjyrat: blu për path, jeshile për prompt.
- */
 void get_prompt(char *prompt, size_t size) {
     char cwd[PATH_MAX];
     char *home = getenv("HOME");
@@ -28,11 +23,6 @@ void get_prompt(char *prompt, size_t size) {
         snprintf(prompt, size, "\033[1;31m???\033[1;32m$>\033[0m ");
     }
 }
-
-/*
- * Shfaq listën e komandave të brendshme dhe operatorëve specialë.
- * Përfshin shpjegime të shkurtra për çdo komandë dhe operator.
- */
 void shell_help() {
     printf("\nAvailable built-in commands:\n");
     printf(" help - Show this help message\n");
@@ -102,34 +92,6 @@ void shell_echo(char **args) {
     }
     printf("\n");
 }
-// void shell_echo(char **args) {
-//     if (args[1] == NULL) {
-//         printf("\n");
-//         return;
-//     }
-    
-//     int i = 1;
-//     while (args[i] != NULL) {
-//         // Check for special operators
-//         if (strcmp(args[i], ">") == 0 || 
-//             strcmp(args[i], "<") == 0 || 
-//             strcmp(args[i], "|") == 0 || 
-//             strcmp(args[i], "&") == 0) {
-//             break;  // Stop at the first special operator
-//         }
-        
-//         printf("%s", args[i]);
-//         if (args[i + 1] != NULL && 
-//             strcmp(args[i + 1], ">") != 0 && 
-//             strcmp(args[i + 1], "<") != 0 && 
-//             strcmp(args[i + 1], "|") != 0 && 
-//             strcmp(args[i + 1], "&") != 0) {
-//             printf(" ");
-//         }
-//         i++;
-//     }
-//     printf("\n");
-// }
 
 /*
  * Shfaq historinë e komandave të ekzekutuara.
@@ -178,32 +140,20 @@ void add_to_history(const char *command) {
  * Kthen 1 nëse komanda ishte e brendshme dhe u ekzekutua.
  * Kthen 0 nëse komanda nuk është e brendshme.
  */
-// int handle_builtin(char **args) {
-//     if (args[0] == NULL) return 0;
-//     if (strcmp(args[0], "help") == 0) { shell_help(); return 1; }
-//     if (strcmp(args[0], "cd") == 0) { shell_cd(args); return 1; }
-//     if (strcmp(args[0], "pwd") == 0) { shell_pwd(); return 1; }
-//     if (strcmp(args[0], "echo") == 0) { shell_echo(args); return 1; }
-//     if (strcmp(args[0], "history") == 0) { shell_history(); return 1; }
-//     if (strcmp(args[0], "clear") == 0) { shell_clear(); return 1; }
-//     return 0;
-// }
 int handle_builtin(char **args) {
     if (args[0] == NULL) return 0;
     
-    // Check if we have any special operators in the command
     int i = 0;
     while (args[i] != NULL) {
         if (strcmp(args[i], ">") == 0 || 
             strcmp(args[i], "<") == 0 || 
             strcmp(args[i], "|") == 0 || 
             strcmp(args[i], "&") == 0) {
-            return 0;  // Don't handle as builtin if special operators exist
+            return 0;  
         }
         i++;
     }
     
-    // Now handle actual builtins if no special operators were found
     if (strcmp(args[0], "help") == 0) { shell_help(); return 1; }
     if (strcmp(args[0], "cd") == 0) { shell_cd(args); return 1; }
     if (strcmp(args[0], "pwd") == 0) { shell_pwd(); return 1; }
